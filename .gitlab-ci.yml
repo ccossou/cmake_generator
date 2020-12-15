@@ -1,0 +1,10 @@
+image: python:latest
+
+before_script:
+  - pip install -r requirements.txt
+  - python setup.py develop
+
+pytest:
+  stage: test
+  script:
+    - pytest
