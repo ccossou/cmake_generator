@@ -6,7 +6,15 @@ LOG = logging.getLogger(__name__)
 __all__ = ["Project", "Application", "Library"]
 
 class Project(object):
-    def __init__(self, name, version, install=False, custom_install=None):
+    def __init__(self, name, version, language="CXX", install=False, custom_install=None):
+        """
+
+        :param str name: Project name, spaces forbidden
+        :param str version: (e.g. 1.0.0)
+        :param str language: [optional] (default=CXX)
+        :param bool install: [optional] (default=False)
+        :param str custom_install: [optional] (default=None)
+        """
 
         if not isinstance(name, str):
             raise TypeError(f"name attribute must be set to an instance of str")
@@ -17,6 +25,9 @@ class Project(object):
         if not isinstance(version, str):
             raise TypeError(f"version attribute must be set to an instance of str")
 
+        if not isinstance(language, str):
+            raise TypeError(f"language attribute must be set to an instance of str")
+
         if not isinstance(install, bool):
             raise TypeError(f"install attribute must be set to an instance of bool")
 
@@ -25,6 +36,7 @@ class Project(object):
 
         self.name = name
         self.version = version
+        self.language = language
         self.custom_install = custom_install
         self.install = install
 
@@ -36,7 +48,7 @@ class Project(object):
     def gen_project(self):
 
         text = f"cmake_minimum_required(VERSION 3.13...3.16 FATAL_ERROR)\n"
-        text += f"project({self.name} VERSION {self.version} LANGUAGES CXX)\n\n"
+        text += f"project({self.name} VERSION {self.version} LANGUAGES {self.language})\n\n"
 
         if self.custom_install is not None:
             text += "# Use this snippet *after* PROJECT(xxx) to change the default installation directory\n"
@@ -133,14 +145,31 @@ class Project(object):
 class Target(object):
     def __init__(self, name):
         self.name = name
-        self.headers = []
-        self.sources = []
+        self._pub_headers = []
+        self._priv_headers = []
+        self._pub_sources = []
+        self._priv_sources = []
 
-    def add_sources(self, sources):
-        self.sources.extend(sources)
-        
-    def add_headers(self, headers):
-        self.headers.extend(headers)
+    def add_sources(self, public, private):
+        """
+
+        :param list public:
+        :param list private:
+        :return:
+        """
+        self._priv_sources.extend(private)
+        self._pub_sources.extend(public)
+
+    def add_headers(self, public, private):
+        """
+
+        :param list public:
+        :param list private:
+        :return:
+        """
+
+        self._pub_headers.extend(public)
+        self._priv_headers.extend(private)
 
 class Application(Target):
     def __init__(self, *args, **kwargs):
@@ -155,11 +184,15 @@ class Library(Target):
         text += f"\n"
         text += f"target_sources({self.name}\n"
         text += f"    PRIVATE\n"
-        for s in self.sources:
+        for s in self._priv_sources:
+            text += f"        {s}\n"
+        for s in self._priv_headers:
             text += f"        {s}\n"
 
         text += f"    PUBLIC\n"
-        for h in self.headers:
+        for h in self._pub_sources:
+            text += f'        "$<BUILD_INTERFACE:${{CMAKE_CURRENT_LIST_DIR}}/{h}>"\n'
+        for h in self._pub_headers:
             text += f'        "$<BUILD_INTERFACE:${{CMAKE_CURRENT_LIST_DIR}}/{h}>"\n'
 
         text += f"    )\n"
@@ -167,7 +200,7 @@ class Library(Target):
         text += f"set_target_properties({self.name} PROPERTIES PUBLIC_HEADER\n"
 
         tmp_list = []
-        for h in self.headers:
+        for h in self._pub_headers:
             tmp_list.append(f"${{CMAKE_CURRENT_LIST_DIR}}/{h}")
         text += f'        "{";".join(tmp_list)}"\n'
 

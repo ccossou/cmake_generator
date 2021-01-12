@@ -1,0 +1,13 @@
+project(JSONUtils 1.1.0 CXX)
+install($ENV{HOME}/install)
+
+library(toto_shared
+    PRIVATE
+        toto_shared.cpp
+        sub-lib/lib.cpp
+    PUBLIC
+        toto_shared.h
+        sub-lib/lib.h
+)
+
+

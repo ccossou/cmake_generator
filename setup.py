@@ -37,6 +37,6 @@ setup(
     author_email="",
     packages=find_packages(),
     package_data={},
-    scripts=[],
+    scripts=["cmake_generator/scripts/pycmake"],
     data_files=[('', ['README.adoc'])]
 )

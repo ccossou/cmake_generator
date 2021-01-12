@@ -46,3 +46,62 @@ cmake_generator.init_log(log="cmake_generator.log", stdout_loglevel="INFO", file
 * `file_loglevel`: log level for log file (ERROR, WARNING, INFO, DEBUG)
 * [optional] `extra_config`: Set of extra properties to be added to the dict_config for logging
 
+== pycmake.txt
+The base file start with this mandatory line:
+[source]
+----
+project JSONUtils 1.0.0 CXX
+----
+respectively project name, version and language used.
+
+=== Install
+If you want to install your targets use:
+[source]
+----
+install
+----
+In case you want a custom installation, use:
+[source]
+----
+install $ENV{HOME}/install
+----
+
+=== library
+To add a library, do:
+[source]
+----
+library toto_shared
+    PRIVATE
+        toto_shared.cpp
+        sub-lib/lib.cpp
+    PUBLIC
+        toto_shared.h
+        sub-lib/lib.h
+    PUBLIC DEPENDENCY
+
+    PRIVATE DEPENDENCY
+
+----
+Public headers will automatically be installed.
+
+=== executable
+To add an executable, do:
+[source]
+----
+executable main.cpp
+    PUBLIC DEPENDENCY
+        library
+    PRIVATE DEPENDENCY
+
+----
+
+=== TODO
+Add cmake verbatim that should look like this:
+[source]
+----
+#pycmake:cmake.begin
+
+#pycmake:cmake.end
+----
+
+Problem is, I can't put the verbatim were it was comparatively to the original pycmake.txt file, because pycmake instructions are not executed on the fly, but rather stored and run at the end of the parsing (because the project, especially the install, need to know all the targets)
