@@ -1,4 +1,6 @@
 import logging
+import os
+
 from . import constants
 
 LOG = logging.getLogger(__name__)
@@ -40,10 +42,21 @@ class Project(object):
         self.custom_install = custom_install
         self.install = install
 
+        self.cwd = None
+
         self.targets = []
 
     def add_targets(self, *targets):
         self.targets.extend(targets)
+
+    def set_cwd(self, cwd):
+        """
+        Set cwd member variable
+
+        :param str cwd: working directory in which all files will be written
+        :return:
+        """
+        self.cwd = cwd
 
     def gen_project(self):
 
@@ -136,11 +149,15 @@ class Project(object):
     def write(self):
         filename = constants.cmake_filename
 
+        if self.cwd is not None:
+            filename = os.path.join(self.cwd, filename)
+
         stringify = self.gen_project()
 
         obj = open(filename, "w")
         obj.write(stringify)
         obj.close()
+
 
 class Target(object):
     def __init__(self, name):
@@ -171,9 +188,11 @@ class Target(object):
         self._pub_headers.extend(public)
         self._priv_headers.extend(private)
 
+
 class Application(Target):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
 class Library(Target):
     def __init__(self, *args, **kwargs):
@@ -206,9 +225,11 @@ class Library(Target):
 
         text += f"        )\n"
         text += f"\n"
-        text += f"#target_link_libraries(toto_shared PUBLIC lib) # en modern cmake il faut toujours definir ce quon veut shared ou pas\n"
+        text += f"#target_link_libraries(toto_shared PUBLIC lib) # en modern cmake il faut toujours definir " \
+                f"ce quon veut shared ou pas\n"
         text += f"\n"
-        text += f"# when used as a client, the relative path is different with this. not needed if identical to source build\n"
+        text += f"# when used as a client, the relative path is different with this. not needed if " \
+                f"identical to source build\n"
         text += f"target_include_directories({self.name}\n"
         text += f"    PUBLIC\n"
         text += f"        $<BUILD_INTERFACE:${{{self.name}_SOURCE_DIR}}/include>\n"
@@ -216,8 +237,10 @@ class Library(Target):
         text += f"    )\n"
         text += f"\n"
         text += f"add_library({self.name}::{self.name} ALIAS {self.name})\n"
-        text += f"# notion dalias. si je fait pas ça, le client doit modifier le target include diretories et modifier le target link de lexecutable\n"
-        text += f"# avec un alias cmake cree un wrapper et lapp cliente avec le nom alias et il va rajouter les flags tout seul\n"
+        text += f"# notion dalias. si je fait pas ça, le client doit modifier le target include diretories " \
+                f"et modifier le target link de lexecutable\n"
+        text += f"# avec un alias cmake cree un wrapper et lapp cliente avec le nom alias et il va rajouter " \
+                f"les flags tout seul\n"
         text += f"# il faut utiliser ça par defaut pour que ce soit plus simple pour le client\n"
 
         return text

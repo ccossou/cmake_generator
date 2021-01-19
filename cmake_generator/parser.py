@@ -1,9 +1,10 @@
 import logging
 import glob
 import os
+import re
+
 from . import constants
 from . import generator
-import re
 
 LOG = logging.getLogger(__name__)
 
@@ -47,9 +48,6 @@ def parse_file(file):
                 full_line += line
 
         command, args = parse_command(full_line)
-        words = line.split()
-
-        command = words[0].lower()
 
         if command == "project":
             project_name, version_number, language = args
@@ -75,7 +73,9 @@ def parse_file(file):
     # Create actual CMakeList.txt file
     project = generator.Project(project_name, version_number, language, custom_install=custom_install, install=install)
     project.add_targets(*targets)
-    project.write()
+    project.set_cwd(os.path.dirname(file))
+
+    return project
 
 
 def parse_command(text):
@@ -111,26 +111,26 @@ def parse_target_args(args):
     :rtype: list(str), list(str), list(str), list(str)
     """
 
-    private = []
-    public = []
+    private_sources = []
+    public_sources = []
     private_dep = []
     public_dep = []
 
     for word in args:
-        if word == "PRIVATE":
-            active_list = private
-        elif word == "PUBLIC":
-            active_list = public
-        elif word == "PRIVATE_DEPENDENCIES":
+        if word.upper() == "PRIVATE":
+            active_list = private_sources
+        elif word.upper() == "PUBLIC":
+            active_list = public_sources
+        elif word.upper() == "PRIVATE_DEPENDENCIES":
             active_list = private_dep
-        elif word == "PUBLIC_DEPENDENCIES":
+        elif word.upper() == "PUBLIC_DEPENDENCIES":
             active_list = public_dep
         else:
             active_list.append(word)
 
     priv_header = []
     priv_source = []
-    for item in private:
+    for item in private_sources:
         if any(ext in item for ext in constants.header_ext):
             priv_header.append(item)
         else:
@@ -138,7 +138,7 @@ def parse_target_args(args):
 
     pub_header = []
     pub_source = []
-    for item in public:
+    for item in public_sources:
         if any(ext in item for ext in constants.header_ext):
             pub_header.append(item)
         else:

@@ -77,9 +77,9 @@ library toto_shared
     PUBLIC
         toto_shared.h
         sub-lib/lib.h
-    PUBLIC DEPENDENCY
-
-    PRIVATE DEPENDENCY
+    PUBLIC_DEPENDENCIES
+        library
+    PRIVATE_DEPENDENCIES
 
 ----
 Public headers will automatically be installed.
@@ -89,9 +89,9 @@ To add an executable, do:
 [source]
 ----
 executable main.cpp
-    PUBLIC DEPENDENCY
+    PUBLIC_DEPENDENCIES
         library
-    PRIVATE DEPENDENCY
+    PRIVATE_DEPENDENCIES
 
 ----
 

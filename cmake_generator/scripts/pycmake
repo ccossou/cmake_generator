@@ -6,7 +6,6 @@ Main entry point to run PyCMake
 @author: Christophe Cossou
 """
 import sys
-
 import cmake_generator
 
 if __name__ == '__main__':

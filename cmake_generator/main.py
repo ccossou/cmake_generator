@@ -1,4 +1,5 @@
 import logging
+
 from . import parser
 
 LOG = logging.getLogger(__name__)
@@ -15,4 +16,5 @@ def pycmake(path):
     files = parser.find_files(path)
 
     for file in files:
-        parser.parse_file(file)
+        project = parser.parse_file(file)
+        project.write()
